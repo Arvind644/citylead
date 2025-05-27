@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webflow Integration Example</title>
+</head>
+<body>
+  <div id="city-leads-container"></div>
+
+  <script>
+    // This code can be placed in a Webflow embed element
+    document.addEventListener('DOMContentLoaded', async function() {
+      try {
+        // Replace with your deployed Next.js API URL
+        const apiUrl = 'https://your-nextjs-app.vercel.app/api/city-leads';
+        
+        // Fetch city leads data
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        
+        const data = await response.json();
+        const container = document.getElementById('city-leads-container');
+        
+        // Display the data
+        if (data.records && data.records.length > 0) {
+          const list = document.createElement('ul');
+          
+          data.records.forEach(record => {
+            const item = document.createElement('li');
+            item.textContent = record.fields.Name || 'No name provided';
+            list.appendChild(item);
+          });
+          
+          container.appendChild(list);
+        } else {
+          container.textContent = 'No city leads found';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('city-leads-container').textContent = 'Failed to load data';
+      }
+    });
+  </script>
+</body>
+</html> 
