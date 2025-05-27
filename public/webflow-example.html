@@ -4,9 +4,53 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Webflow Integration Example</title>
+  <style>
+    .lead-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      background: white;
+    }
+    .lead-card:hover {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .attachments {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .attachment {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .attachment:hover {
+      opacity: 0.8;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal img {
+      max-width: 90%;
+      max-height: 90vh;
+      object-fit: contain;
+    }
+  </style>
 </head>
 <body>
   <div id="city-leads-container"></div>
+  <div id="image-modal" class="modal" onclick="closeModal()">
+    <img id="modal-image" src="" alt="Full size image">
+  </div>
 
   <script>
     // This code can be placed in a Webflow embed element
@@ -26,23 +70,68 @@
         
         // Display the data
         if (data.records && data.records.length > 0) {
-          const list = document.createElement('ul');
-          
           data.records.forEach(record => {
-            const item = document.createElement('li');
-            item.textContent = record.fields.Name || 'No name provided';
-            list.appendChild(item);
+            const fullName = [
+              record.fields['First Name'] || '',
+              record.fields['Last Name'] || ''
+            ].filter(Boolean).join(' ');
+
+            const leadCard = document.createElement('div');
+            leadCard.className = 'lead-card';
+            
+            const content = `
+              <h3>${fullName || 'No name provided'}</h3>
+              <p>Email: <a href="mailto:${record.fields.Email || ''}">${record.fields.Email || 'N/A'}</a></p>
+              <p>City: ${record.fields.City || 'N/A'}</p>
+              ${record.fields.LinkedIn ? 
+                `<p>LinkedIn: <a href="${record.fields.LinkedIn}" target="_blank" rel="noopener noreferrer">Profile</a></p>` 
+                : ''}
+              <p>Created: ${new Date(record.createdTime).toLocaleDateString()}</p>
+            `;
+            
+            leadCard.innerHTML = content;
+
+            // Add attachments if they exist
+            if (record.fields.Attachments && record.fields.Attachments.length > 0) {
+              const attachmentsDiv = document.createElement('div');
+              attachmentsDiv.className = 'attachments';
+              
+              record.fields.Attachments.forEach(attachment => {
+                const img = document.createElement('img');
+                img.src = attachment.url;
+                img.alt = attachment.filename;
+                img.className = 'attachment';
+                img.onclick = () => showModal(attachment.url);
+                attachmentsDiv.appendChild(img);
+              });
+              
+              leadCard.appendChild(attachmentsDiv);
+            }
+            
+            container.appendChild(leadCard);
           });
-          
-          container.appendChild(list);
         } else {
-          container.textContent = 'No city leads found';
+          container.innerHTML = '<p>No city leads found</p>';
         }
       } catch (error) {
         console.error('Error:', error);
-        document.getElementById('city-leads-container').textContent = 'Failed to load data';
+        document.getElementById('city-leads-container').innerHTML = 
+          '<p style="color: red;">Failed to load data</p>';
       }
     });
+
+    // Modal functions
+    function showModal(imageUrl) {
+      const modal = document.getElementById('image-modal');
+      const modalImg = document.getElementById('modal-image');
+      modalImg.src = imageUrl;
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('image-modal');
+      modal.style.display = 'none';
+    }
   </script>
 </body>
 </html> 

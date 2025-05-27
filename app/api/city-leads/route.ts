@@ -26,12 +26,18 @@ export async function GET() {
   try {
     // Initialize Airtable with API key from environment variables
     const apiKey = process.env.AIRTABLE_API_KEY;
-    const baseId = 'appNETNphSQEogK9M'; // Using the base ID directly
+    const baseId = 'appNETNphSQEogK9M';
     
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Airtable API key is not configured' },
-        { status: 500 }
+      return new NextResponse(
+        JSON.stringify({ error: 'Airtable API key is not configured' }),
+        {
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          },
+        }
       );
     }
 
@@ -78,13 +84,36 @@ export async function GET() {
         );
     });
 
-    // Return all records
-    return NextResponse.json({ records });
+    // Return all records with CORS headers
+    return new NextResponse(JSON.stringify({ records }), {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
   } catch (error) {
     console.error('Error fetching data from Airtable:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch data from Airtable' },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ error: 'Failed to fetch data from Airtable' }),
+      {
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
+}
+
+// Handle OPTIONS requests for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
 } 
